@@ -12,6 +12,7 @@ set -euxo pipefail
 
 # the database name you want to create
 DATABASE="restore"
+DBOUT="targetdb"
 # the password for your user
 PASSWORD="<YourStrong@Passw0rd>"
 # the name to give to the docker container
@@ -54,19 +55,19 @@ done <<< "$filelist"
 # import the database into MS SQL
 docker exec -it "$NAME" /opt/mssql-tools/bin/sqlcmd -S localhost \
    -U SA -P "$PASSWORD" \
-   -Q "RESTORE DATABASE $DATABASE FROM DISK = \"/data/$1\" $moves"
+   -Q "USE $DATABASE RESTORE DATABASE $DBOUT FROM DISK = \"/data/$1\" $moves"
 
 # list the tables in the database you just created
 # requires bash >= 4
 mapfile -t tables < <(docker exec -it "$NAME" /opt/mssql-tools/bin/sqlcmd -S localhost \
     -U SA -P "$PASSWORD" \
-    -Q "SELECT table_schema+'.'+table_name FROM $DATABASE.INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" \
+    -Q "SELECT table_schema+'.'+table_name FROM $DBOUT.INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" \
     | tail -n+3 | sed -e '$ d' | sed -e '$ d' | tr -d ' ')
 
 # for each table, dump the output to <tablename>.csv
 for table in "${tables[@]}"
 do
     docker exec -it "$NAME" /opt/mssql-tools/bin/bcp \
-        "select * from $DATABASE.$table" queryout "/data/$table.csv" \
+        "select * from $DBOUT.$table" queryout "/data/$table.csv" \
         -S localhost -U SA -P "$PASSWORD" -t, -c
 done
