@@ -35,20 +35,19 @@ fi
 # test_Log E:\Logs\Dev1.ldf
 filelist=$(docker exec -it "$NAME" /opt/mssql-tools/bin/sqlcmd -S localhost \
    -U SA -P "$PASSWORD" \
-   -Q "RESTORE FILELISTONLY FROM DISK = \"/data/$1\"" \
-   | tr -s ' ' | cut -d ' ' -f 1-2 | sed -e '$ d' | sed -e '$ d' | tail -n+3)
+   -Q "RESTORE FILELISTONLY FROM DISK = \"/data/$1\"" |
+   grep '^------' -A 100 | tail -n+2 | head -n-2 | sed -E 's/     +/^/g' | cut -d $'^' -f1-2)
 
 # create a series of "WITH MOVE" statements, to tell MS SQL how to import each
 # file
 moves=""
-while IFS= read -r line; do
-    parts=($line)
+while IFS=^ read table file rest; do
     # turn c:\dir\path\somefile.mdf to somefile.mdf
-    filename=$(echo "${parts[1]}" | sed -E 's/^.*\\([^\\]*)$/\1/g')
+    filename=$(echo "$file" | sed -E 's/^.*\\([^\\]*)$/\1/g;')
     if [[ -z $moves ]]; then
-        moves="WITH MOVE \"${parts[0]}\" TO \"/var/opt/mssql/data/$filename\""
+        moves="WITH MOVE \"$table\" TO \"/var/opt/mssql/data/$filename\""
     else
-        moves="$moves, MOVE \"${parts[0]}\" TO \"/var/opt/mssql/data/$filename\""
+        moves="$moves, MOVE \"$table\" TO \"/var/opt/mssql/data/$filename\""
     fi
 done <<< "$filelist"
 
