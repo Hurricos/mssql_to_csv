@@ -23,7 +23,7 @@ if [[ -z ${1:-} ]]; then
 fi
 
 # start a server if one isn't already running
-if [[ -z $(docker ps -q -f "name=$NAME") ]]; then
+if [[ -z $(docker ps -a -q -f "name=$NAME") ]]; then
     docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=$PASSWORD" \
       -p 1433:1433 --name "$NAME" -v "${PWD}:/data" \
       -d mcr.microsoft.com/mssql/server:2019-GA-ubuntu-16.04
