@@ -4,6 +4,6 @@
 
 set -x
 list_tables | while read table; do
-    dump_table "$table" > "/output/$table.csv"
-    chmod 777 "/output/$table.csv"
+    dump_table "$table" > "/output/$table.ksv"
+    chmod 777 "/output/$table.ksv"
 done
