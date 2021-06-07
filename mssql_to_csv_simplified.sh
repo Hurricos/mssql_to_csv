@@ -31,6 +31,8 @@ if [[ -z $(docker ps -a -q -f "name=$CONTAINER_NAME") ]]; then
       -d mcr.microsoft.com/mssql/server:2019-GA-ubuntu-16.04
 fi
 
+sleep 3s;
+
 # First we need to find out what filenames you have.
 # this will print out a list of names and file location like:
 # test_Data E:\Data\Dev1.mdf
