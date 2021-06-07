@@ -39,10 +39,13 @@ sleep 3s;
 # this will print out a list of names and file location like:
 # test_Data E:\Data\Dev1.mdf
 # test_Log E:\Logs\Dev1.ldf
-filelist=$(docker exec -it "$CONTAINER_NAME" /opt/mssql-tools/bin/sqlcmd -S localhost \
-   -U SA -P "$PASSWORD" \
-   -Q "RESTORE FILELISTONLY FROM DISK = \"/data/$1\"" |
-   grep '^------' -A 100 | tail -n+2 | head -n-2 | sed -E 's/     +/^/g' | cut -d $'^' -f1-2)
+filelist=''
+while ! [[ "$filelist" ]] ; do
+    filelist=$(docker exec -it "$CONTAINER_NAME" /opt/mssql-tools/bin/sqlcmd -S localhost \
+                      -U SA -P "$PASSWORD" \
+                      -Q "RESTORE FILELISTONLY FROM DISK = \"/data/$1\"" |
+                   grep '^------' -A 100 | tail -n+2 | head -n-2 | sed -E 's/     +/^/g' | cut -d $'^' -f1-2)
+done
 
 # create a series of "WITH MOVE" statements, to tell MS SQL how to import each
 # file
