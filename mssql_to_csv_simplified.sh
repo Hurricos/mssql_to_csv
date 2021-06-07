@@ -20,12 +20,14 @@ if [[ -z ${1:-} ]]; then
     exit 1
 fi
 
-rm -rf output;
-mkdir -p output;
-chmod 777 output;
+[ -d output ] && chmod 777 output;
 
 # start a server if one isn't already running
 if [[ -z $(docker ps -a -q -f "name=$CONTAINER_NAME") ]]; then
+    rm -rf output;
+    mkdir -p output;
+    chmod 777 output;
+
     docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=$PASSWORD" \
       -p 1433:1433 --name "$CONTAINER_NAME" -v "${PWD}:/data" -v "${PWD}/output:/output" -v "${PWD}/src:/opt/mssql_to_csv" \
       -d mcr.microsoft.com/mssql/server:2019-GA-ubuntu-16.04
